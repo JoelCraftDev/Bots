@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JoeBot - Tu Asistente Developer</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        celeste: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                            950: '#082f49',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #030712;
+            overflow-x: hidden;
+        }
+        
+        .code-font {
+            font-family: 'Fira Code', monospace;
+        }
+
+        /* Custom scrollbar for chat and elements */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.3);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(56, 189, 248, 0.3);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(56, 189, 248, 0.6);
+        }
+
+        /* Ambient glow effects */
+        .neon-border {
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+        .neon-glow-text {
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+        }
+        .neon-btn {
+            transition: all 0.3s ease;
+        }
+        .neon-btn:hover {
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+            border-color: rgba(56, 189, 248, 0.8);
+            transform: translateY(-1px);
+        }
+
+        /* Message animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .message-anim {
+            animation: fadeInUp 0.3s ease forwards;
+        }
+    </style>
+</head>
+<body class="text-slate-100 min-h-screen flex flex-col justify-between relative">
+
+    <!-- Background Canvas for Particles -->
+    <canvas id="particleCanvas" class="fixed top-0 left-0 w-full h-full -z-10 pointer-events-none"></canvas>
+
+    <!-- Header / Navbar -->
+    <header class="w-full border-b border-celeste-950/40 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50 px-4 py-3">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+            
+            <!-- Developer Style Logo (JB) -->
+            <div class="flex items-center gap-3">
+                <div class="relative flex items-center justify-center w-12 h-12 rounded-xl bg-slate-900 border-2 border-celeste-400 shadow-[0_0_15px_rgba(56,189,248,0.3)] overflow-hidden">
+                    <!-- Tech background grid pattern inside logo -->
+                    <div class="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:8px_8px]"></div>
+                    <div class="z-10 flex flex-col items-center justify-center">
+                        <span class="code-font text-xs text-celeste-400 font-bold tracking-tight">&lt;JB&gt;</span>
+                        <div class="w-4 h-0.5 bg-celeste-500 rounded-full mt-0.5 animate-pulse"></div>
+                    </div>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold text-white flex items-center gap-2">
+                        JoeBot <span class="text-xs px-2 py-0.5 bg-celeste-500/20 text-celeste-300 border border-celeste-500/30 rounded-full font-medium">Soporte IA</span>
+                    </h1>
+                    <p class="text-xs text-celeste-400/80">Developer Assistant</p>
+                </div>
+            </div>
+
+            <!-- Header Info & Status -->
+            <div class="flex items-center gap-2 text-xs text-slate-400 bg-slate-900/60 px-3 py-1.5 rounded-full border border-slate-800">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping inline-block"></span>
+                <span class="w-2 h-2 rounded-full bg-emerald-500 absolute"></span>
+                <span class="ml-1 text-emerald-400 font-medium">En línea</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container Layout -->
+    <main class="flex-1 max-w-6xl w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch my-2 z-10">
+        
+        <!-- Sidebar: Question Categories and List (Left on large screens) -->
+        <aside class="lg:col-span-4 flex flex-col gap-4 bg-slate-950/60 border border-celeste-950/40 rounded-2xl p-4 backdrop-blur-md max-h-[80vh] overflow-hidden">
+            <div>
+                <h2 class="text-base font-bold text-white flex items-center gap-2">
+                    <!-- Book Open Icon -->
+                    <svg class="w-5 h-5 text-celeste-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                    Preguntas Disponibles
+                </h2>
+                <p class="text-xs text-slate-400 mt-1">Selecciona una pregunta de la lista para consultarme directamente.</p>
+            </div>
+
+            <!-- Search bar within Sidebar -->
+            <div class="relative">
+                <input type="text" id="sidebarSearch" placeholder="Buscar pregunta..." class="w-full bg-slate-900 border border-slate-800 rounded-lg py-2 pl-9 pr-3 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-celeste-500/50 transition-colors">
+                <svg class="absolute left-3 top-2.5 w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+
+            <!-- Category Tabs -->
+            <div class="flex gap-1 overflow-x-auto pb-1 border-b border-slate-800 text-xs shrink-0">
+                <button onclick="switchCategory('all')" id="cat-all" class="px-3 py-1.5 rounded-md font-medium transition-colors bg-celeste-500/20 text-celeste-300">Todas</button>
+                <button onclick="switchCategory('discord')" id="cat-discord" class="px-3 py-1.5 rounded-md font-medium transition-colors text-slate-400 hover:text-white">Discord</button>
+                <button onclick="switchCategory('web')" id="cat-web" class="px-3 py-1.5 rounded-md font-medium transition-colors text-slate-400 hover:text-white">Webs</button>
+                <button onclick="switchCategory('general')" id="cat-general" class="px-3 py-1.5 rounded-md font-medium transition-colors text-slate-400 hover:text-white">Otros</button>
+            </div>
+
+            <!-- List of Questions scroll area -->
+            <div id="questionsContainer" class="flex-1 overflow-y-auto space-y-2 pr-1">
+                <!-- Dynamically generated buttons here -->
+            </div>
+        </aside>
+
+        <!-- Chat Area (Right / Main focus) -->
+        <section class="lg:col-span-8 flex flex-col bg-slate-950/85 border border-celeste-950/30 rounded-2xl overflow-hidden backdrop-blur-md max-h-[80vh] shadow-xl">
+            
+            <!-- Chat Header -->
+            <div class="p-4 bg-slate-900/60 border-b border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="relative">
+                        <div class="w-10 h-10 rounded-full bg-celeste-950 border border-celeste-500/50 flex items-center justify-center font-bold text-celeste-400">
+                            JB
+                        </div>
+                        <span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-slate-900 rounded-full"></span>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-white">JoeBot</h3>
+                        <p class="text-xs text-celeste-400/80">Soporte Técnico de Proyectos</p>
+                    </div>
+                </div>
+                <!-- Clean Chat Action -->
+                <button onclick="clearChat()" class="text-xs text-slate-400 hover:text-celeste-300 transition-colors flex items-center gap-1 bg-slate-800/40 hover:bg-slate-800 px-2.5 py-1.5 rounded-lg border border-slate-800">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    Limpiar chat
+                </button>
+            </div>
+
+            <!-- Messages Window -->
+            <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-4">
+                <!-- Initial Welcome Message from JoeBot -->
+                <div class="flex items-start gap-3 max-w-[85%] message-anim">
+                    <div class="w-8 h-8 rounded-full bg-celeste-950 border border-celeste-500/30 flex items-center justify-center shrink-0 text-xs font-bold text-celeste-400">
+                        JB
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800/60 text-slate-100 rounded-2xl rounded-tl-none p-3.5 shadow-md">
+                        <p class="text-sm leading-relaxed">¡Hola! Soy <strong>JoeBot</strong>, el asistente virtual del equipo. 💻✨</p>
+                        <p class="text-sm leading-relaxed mt-1.5">Estoy listo para responder tus preguntas específicas sobre nuestros servicios de creación de servidores de Discord, desarrollo de bots, diseño web y más.</p>
+                        <p class="text-xs text-celeste-400/60 mt-2">💡 Selecciona alguna pregunta de la lista lateral o escribe abajo tu consulta de forma directa.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Typing Indicator (Hidden by default) -->
+            <div id="typingIndicator" class="hidden px-4 py-2 flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-celeste-950 border border-celeste-500/30 flex items-center justify-center shrink-0 text-xs font-bold text-celeste-400">
+                    JB
+                </div>
+                <div class="bg-slate-900 border border-slate-800/60 rounded-2xl rounded-tl-none px-4 py-2.5 flex items-center gap-1.5 shadow-md">
+                    <span class="w-2.5 h-2.5 bg-celeste-500/60 rounded-full animate-bounce" style="animation-delay: 0ms"></span>
+                    <span class="w-2.5 h-2.5 bg-celeste-500/60 rounded-full animate-bounce" style="animation-delay: 150ms"></span>
+                    <span class="w-2.5 h-2.5 bg-celeste-500/60 rounded-full animate-bounce" style="animation-delay: 300ms"></span>
+                </div>
+            </div>
+
+            <!-- Form / Input Panel -->
+            <div class="p-4 bg-slate-900/40 border-t border-slate-900/80">
+                <!-- Live Instant Search & Suggestion Banner when typing -->
+                <div id="suggestionBox" class="hidden bg-slate-950/90 border border-celeste-950 rounded-xl p-2 mb-3 max-h-40 overflow-y-auto shadow-inner">
+                    <p class="text-xs text-celeste-400 font-bold px-2 pb-1.5">Sugerencias recomendadas:</p>
+                    <div id="suggestionList" class="space-y-1">
+                        <!-- Instantly filtered suggestions -->
+                    </div>
+                </div>
+
+                <form id="chatForm" class="flex gap-2 relative items-center">
+                    <input type="text" id="userInput" placeholder="Escribe tu pregunta sobre nuestros servicios aquí..." class="flex-1 bg-slate-900/90 border border-slate-800 focus:border-celeste-500/50 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none transition-all pr-12 focus:ring-1 focus:ring-celeste-500/25">
+                    
+                    <!-- Send Button -->
+                    <button type="submit" class="absolute right-2 p-2 bg-celeste-600 hover:bg-celeste-500 text-white rounded-lg transition-colors hover:shadow-[0_0_12px_rgba(56,189,248,0.4)]">
+                        <svg class="w-5 h-5 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                    </button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full text-center py-4 border-t border-slate-950/40 bg-slate-950/30 backdrop-blur-sm z-10">
+        <p class="text-xs text-slate-500">
+            JoeBot - Reservado para preguntas frecuentes. Creado con pasión para Developers.
+        </p>
+    </footer>
+
+    <!-- Chatbot Logic & Particle Engine Script -->
+    <script>
+        // --- 1. PREGUNTAS Y RESPUESTAS CONFIGURADAS (BASE DE DATOS) ---
+        const botQA = [
+            {
+                id: 1,
+                category: "general",
+                question: "¿Qué servicios ofrecen?",
+                keywords: ["servicios", "ofrecen", "hacen", "hace", "dedican", "trabajo", "creacion"],
+                answer: "Ofrecemos creación de servidores de Discord, desarrollo de bots personalizados para Discord y diseño de páginas web profesionales."
+            },
+            {
+                id: 2,
+                category: "discord",
+                question: "¿Cuánto cuesta un servidor de Discord?",
+                keywords: ["precio", "cuesta", "valor", "servidor", "discord", "presupuesto", "costo"],
+                answer: "El precio depende de la complejidad del proyecto. Contáctanos para recibir una cotización personalizada."
+            },
+            {
+                id: 3,
+                category: "discord",
+                question: "¿Qué incluye un servidor de Discord?",
+                keywords: ["incluye", "trae", "contiene", "servidor", "discord", "canales", "roles"],
+                answer: "Incluye canales organizados, roles personalizados, permisos configurados, categorías y bots básicos si el cliente lo solicita."
+            },
+            {
+                id: 4,
+                category: "discord",
+                question: "¿Cuánto tardan en entregar un servidor de Discord?",
+                keywords: ["tiempo", "tardan", "demoran", "entrega", "duracion", "plazo", "dias", "servidor"],
+                answer: "Generalmente entre 1 y 3 días, dependiendo de los requisitos del cliente."
+            },
+            {
+                id: 5,
+                category: "discord",
+                question: "¿Pueden crear servidores para comunidades de videojuegos?",
+                keywords: ["videojuegos", "gaming", "streamers", "comunidades", "juegos", "crear", "servidor"],
+                answer: "Sí, creamos servidores para gaming, streamers, creadores de contenido, empresas y comunidades en general."
+            },
+            {
+                id: 6,
+                category: "discord",
+                question: "¿Qué tipos de bots desarrollan?",
+                keywords: ["tipos", "bots", "desarrollan", "crean", "funcion", "hacen", "tipo", "bot"],
+                answer: "Desarrollamos bots de moderación, tickets, economía, niveles, música, verificación y funciones totalmente personalizadas."
+            },
+            {
+                id: 7,
+                category: "discord",
+                question: "¿Pueden crear un bot con funciones exclusivas?",
+                keywords: ["exclusivas", "funciones", "personalizado", "exclusivo", "unico", "bot"],
+                answer: "Sí, podemos desarrollar bots adaptados a las necesidades específicas de tu proyecto."
+            },
+            {
+                id: 8,
+                category: "discord",
+                question: "¿Cuánto cuesta un bot de Discord?",
+                keywords: ["precio", "cuesta", "valor", "bot", "discord", "cotizacion", "presupuesto", "costo"],
+                answer: "El precio varía según las funciones solicitadas. Solicita una cotización para obtener un presupuesto exacto."
+            },
+            {
+                id: 9,
+                category: "discord",
+                question: "¿Ofrecen soporte después de la entrega?",
+                keywords: ["soporte", "garantia", "ayuda", "despues", "entrega", "mantenimiento", "errores", "falla"],
+                answer: "Sí, brindamos soporte técnico para resolver dudas y corregir posibles errores."
+            },
+            {
+                id: 10,
+                category: "web",
+                question: "¿Qué tipos de páginas web crean?",
+                keywords: ["tipos", "paginas", "web", "crean", "hacen", "sitios", "tiendas", "landing"],
+                answer: "Creamos páginas informativas, portafolios, landing pages, blogs, tiendas online y sitios web empresariales."
+            },
+            {
+                id: 11,
+                category: "web",
+                question: "¿Las páginas web funcionan en celulares?",
+                keywords: ["celulares", "movil", "telefono", "responsive", "adaptable", "pantallas", "web"],
+                answer: "Sí, todas nuestras páginas web son adaptables a dispositivos móviles."
+            },
+            {
+                id: 12,
+                category: "web",
+                question: "¿Incluyen dominio y hosting?",
+                keywords: ["dominio", "hosting", "alojamiento", "servidor", "incluye", "web"],
+                answer: "Podemos ayudarte a contratar dominio y hosting o trabajar con los servicios que ya tengas."
+            },
+            {
+                id: 13,
+                category: "web",
+                question: "¿Cuánto tarda el desarrollo de una página web?",
+                keywords: ["tiempo", "tarda", "demora", "desarrollo", "entrega", "dias", "duracion", "web"],
+                answer: "Dependiendo del proyecto, el tiempo de entrega suele ser entre 3 y 15 días."
+            },
+            {
+                id: 14,
+                category: "general",
+                question: "¿Aceptan pagos internacionales?",
+                keywords: ["pagos", "internacionales", "metodo", "pago", "paypal", "tarjeta", "moneda", "aceptan"],
+                answer: "Sí, aceptamos diversos métodos de pago nacionales e internacionales."
+            },
+            {
+                id: 15,
+                category: "general",
+                question: "¿Puedo solicitar cambios después de la entrega?",
+                keywords: ["cambios", "modificaciones", "edicion", "ajustes", "despues", "entrega", "revisiones"],
+                answer: "Sí, ofrecemos revisiones y modificaciones según las condiciones acordadas."
+            },
+            {
+                id: 16,
+                category: "general",
+                question: "¿Tienen garantía?",
+                keywords: ["garantia", "seguro", "cobertura", "errores", "falla", "reparacion"],
+                answer: "Sí, ofrecemos garantía para corregir errores relacionados con el desarrollo entregado."
+            },
+            {
+                id: 17,
+                category: "general",
+                question: "¿Cómo realizo un pedido?",
+                keywords: ["pedido", "comprar", "contratar", "ordenar", "solicitar", "encargar", "comienzo", "empezar"],
+                answer: "Solo debes contactarnos, explicar tu proyecto y recibirás una propuesta personalizada."
+            },
+            {
+                id: 18,
+                category: "general",
+                question: "¿Puedo ver trabajos anteriores?",
+                keywords: ["trabajos", "anteriores", "portafolio", "ejemplos", "referencias", "demostracion", "muestras", "ver"],
+                answer: "Sí, contamos con ejemplos y proyectos realizados que podemos mostrarte."
+            },
+            {
+                id: 19,
+                category: "general",
+                question: "¿Hacen descuentos por varios servicios?",
+                keywords: ["descuentos", "descuento", "oferta", "paquete", "combos", "varios", "servicios", "promocion"],
+                answer: "Sí, ofrecemos descuentos especiales al contratar varios servicios juntos."
+            },
+            {
+                id: 20,
+                category: "general",
+                question: "¿Cómo puedo contactar con ustedes?",
+                keywords: ["contactar", "contacto", "hablar", "comunicar", "redes", "correo", "discord", "escribir"],
+                answer: "Puedes contactarnos a través de Discord, correo electrónico o nuestras redes sociales."
+            }
+        ];
+
+        // Global State variables
+        let currentCategory = 'all';
+
+        // --- 2. PARTICLE SYSTEM ENGINE (CELESTIAL/LIGHT BLUE GLOW) ---
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let particles = [];
+        const particleCount = 65; // Balanced density
+
+        // Resize Canvas to keep full fidelity
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initParticles();
+        }
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2.5 + 0.5;
+                this.speedX = Math.random() * 0.4 - 0.2;
+                this.speedY = Math.random() * 0.4 - 0.2;
+                this.opacity = Math.random() * 0.5 + 0.15;
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                // Bounce boundaries
+                if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(125, 211, 252, ${this.opacity})`; // Light blue color (celeste-300)
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw links first for layered beauty
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dist = Math.hypot(particles[i].x - particles[j].x, particles[i].y - particles[j].y);
+                    if (dist < 120) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = `rgba(56, 189, 248, ${0.12 * (1 - dist / 120)})`; // Fading light blue connecting lines
+                        ctx.lineWidth = 0.8;
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            // Draw particles on top
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            requestAnimationFrame(animateParticles);
+        }
+
+        // Initialize Particles on Load
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('DOMContentLoaded', () => {
+            resizeCanvas();
+            animateParticles();
+            renderSidebarQuestions();
+        });
+
+
+        // --- 3. UI GENERATION & INTERACTION LOGIC ---
+
+        // Render questions on left sidebar
+        function renderSidebarQuestions(filterText = '') {
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = '';
+
+            const filtered = botQA.filter(item => {
+                const matchesCategory = currentCategory === 'all' || item.category === currentCategory;
+                const matchesSearch = item.question.toLowerCase().includes(filterText.toLowerCase());
+                return matchesCategory && matchesSearch;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center p-4 text-xs text-slate-500">
+                        No se encontraron preguntas.
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach(item => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-3 rounded-xl bg-slate-900/40 hover:bg-celeste-950/20 border border-slate-800 hover:border-celeste-500/40 transition-all text-xs flex items-start gap-2.5 message-anim group";
+                btn.onclick = () => selectQuestion(item.question);
+                
+                btn.innerHTML = `
+                    <span class="mt-0.5 w-1.5 h-1.5 bg-celeste-400 rounded-full shrink-0 group-hover:scale-125 transition-transform"></span>
+                    <span class="text-slate-200 group-hover:text-white transition-colors">${item.question}</span>
+                `;
+                container.appendChild(btn);
+            });
+        }
+
+        // Switch category tabs
+        function switchCategory(category) {
+            currentCategory = category;
+            
+            // Toggle active classes on tabs
+            const tabs = ['all', 'discord', 'web', 'general'];
+            tabs.forEach(tab => {
+                const tabEl = document.getElementById(`cat-${tab}`);
+                if (tab === category) {
+                    tabEl.className = "px-3 py-1.5 rounded-md font-medium transition-colors bg-celeste-500/20 text-celeste-300";
+                } else {
+                    tabEl.className = "px-3 py-1.5 rounded-md font-medium transition-colors text-slate-400 hover:text-white";
+                }
+            });
+
+            // Re-render sidebar with the selected category
+            const searchVal = document.getElementById('sidebarSearch').value;
+            renderSidebarQuestions(searchVal);
+        }
+
+        // Dynamic search as user types in sidebar
+        document.getElementById('sidebarSearch').addEventListener('input', (e) => {
+            renderSidebarQuestions(e.target.value);
+        });
+
+        // Search Input in typing area (Auto-suggest engine)
+        const userInput = document.getElementById('userInput');
+        const suggestionBox = document.getElementById('suggestionBox');
+        const suggestionList = document.getElementById('suggestionList');
+
+        userInput.addEventListener('input', (e) => {
+            const val = e.target.value.trim();
+            if (val.length < 2) {
+                suggestionBox.classList.add('hidden');
+                return;
+            }
+
+            // Normalise and search match
+            const matches = botQA.filter(item => 
+                item.question.toLowerCase().includes(val.toLowerCase()) ||
+                item.keywords.some(keyword => val.toLowerCase().includes(keyword.toLowerCase()))
+            ).slice(0, 4); // Limit to top 4 recommendations
+
+            if (matches.length > 0) {
+                suggestionBox.classList.remove('hidden');
+                suggestionList.innerHTML = '';
+                matches.forEach(match => {
+                    const div = document.createElement('div');
+                    div.className = "p-2 rounded-lg text-xs hover:bg-celeste-950/30 text-slate-300 hover:text-celeste-300 cursor-pointer transition-colors border border-transparent hover:border-celeste-500/20";
+                    div.innerText = match.question;
+                    div.onclick = () => {
+                        selectQuestion(match.question);
+                        suggestionBox.classList.add('hidden');
+                    };
+                    suggestionList.appendChild(div);
+                });
+            } else {
+                suggestionBox.classList.add('hidden');
+            }
+        });
+
+        // Handle question selection
+        function selectQuestion(questionText) {
+            userInput.value = '';
+            suggestionBox.classList.add('hidden');
+            
+            // Add user message to UI
+            appendMessage(questionText, 'user');
+            
+            // Scroll down
+            scrollToBottom();
+
+            // Trigger Bot Response with Typing Effect
+            triggerBotResponse(questionText);
+        }
+
+        // --- 4. NATURAL LANGUAGE INTERPRETER (FUZZY MATCHING) ---
+        function getBotResponse(userQuery) {
+            const queryClean = cleanText(userQuery);
+
+            // Attempt to find exact matching index
+            let bestMatch = null;
+            let highestScore = 0;
+
+            botQA.forEach(item => {
+                const qClean = cleanText(item.question);
+                
+                // Score 1: Direct Match or Substring Match
+                if (qClean.includes(queryClean) || queryClean.includes(qClean)) {
+                    bestMatch = item;
+                    highestScore = 100;
+                    return;
+                }
+
+                // Score 2: Jaccard-like simple keyword intersection
+                let matches = 0;
+                item.keywords.forEach(kw => {
+                    if (queryClean.includes(cleanText(kw))) {
+                        matches++;
+                    }
+                });
+
+                if (matches > 0) {
+                    const score = (matches / item.keywords.length) * 80;
+                    if (score > highestScore) {
+                        highestScore = score;
+                        bestMatch = item;
+                    }
+                }
+            });
+
+            // Threshold validation
+            if (bestMatch && highestScore > 15) {
+                return bestMatch.answer;
+            }
+
+            // Fallback response if no match was found
+            return null;
+        }
+
+        // Text normalization helper (Remove accents, punctuation, etc.)
+        function cleanText(text) {
+            return text.toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "") // removes Spanish accents
+                .replace(/[¿?¡!.,;:()\-]/g, "") // removes punctuation
+                .trim();
+        }
+
+        // --- 5. CHAT MESSAGING SYSTEMS & RENDERING ---
+
+        const chatMessages = document.getElementById('chatMessages');
+        const typingIndicator = document.getElementById('typingIndicator');
+
+        function appendMessage(text, sender) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `flex items-start gap-3 max-w-[85%] message-anim ${sender === 'user' ? 'ml-auto flex-row-reverse' : ''}`;
+
+            const iconMarkup = sender === 'user' ? 
+                `<div class="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0 text-xs font-bold text-slate-300">TÚ</div>` : 
+                `<div class="w-8 h-8 rounded-full bg-celeste-950 border border-celeste-500/30 flex items-center justify-center shrink-0 text-xs font-bold text-celeste-400">JB</div>`;
+
+            const bgClass = sender === 'user' ? 
+                'bg-celeste-600 border border-celeste-500 text-white rounded-2xl rounded-tr-none' : 
+                'bg-slate-900 border border-slate-800/60 text-slate-100 rounded-2xl rounded-tl-none';
+
+            msgDiv.innerHTML = `
+                ${iconMarkup}
+                <div class="${bgClass} p-3.5 shadow-md">
+                    <p class="text-sm leading-relaxed">${text}</p>
+                </div>
+            `;
+
+            chatMessages.appendChild(msgDiv);
+        }
+
+        // Trigger Typing action simulator
+        function triggerBotResponse(userQuery) {
+            // Show Typing Indicator
+            typingIndicator.classList.remove('hidden');
+            scrollToBottom();
+
+            setTimeout(() => {
+                typingIndicator.classList.add('hidden');
+                
+                const answer = getBotResponse(userQuery);
+
+                if (answer) {
+                    appendMessage(answer, 'bot');
+                } else {
+                    // Custom fallback interface response
+                    const fallbackHTML = `
+                        Lo siento, no tengo una respuesta exacta programada para esa consulta. 
+                        Como soy un asistente de respuesta fija, solo respondo a las preguntas específicas de nuestra gama de servicios. 
+                        <br><br>
+                        👉 <strong>Te recomiendo seleccionar una opción en la lista lateral</strong> o probar con términos breves de búsqueda (como <em>"Discord"</em>, <em>"Página Web"</em> o <em>"Precios"</em>).
+                    `;
+                    appendMessage(fallbackHTML, 'bot');
+                }
+
+                scrollToBottom();
+            }, 900); // 900ms realistic typing lag
+        }
+
+        // Clear Chat Function
+        function clearChat() {
+            chatMessages.innerHTML = '';
+            appendMessage(`¡Chat restablecido! Soy <strong>JoeBot</strong>. ¿En qué te puedo ayudar hoy?`, 'bot');
+        }
+
+        // Scroll helper
+        function scrollToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Form submission handling
+        document.getElementById('chatForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            selectQuestion(text);
+        });
+
+    </script>
+</body>
+</html>
